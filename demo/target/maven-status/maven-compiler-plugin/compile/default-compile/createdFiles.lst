@@ -1,0 +1,10 @@
+com\example\demo\Esercizio3SpringBootRiccardoCroceApplication.class
+com\example\demo\client\SalaryClient.class
+com\example\demo\response\EmployeeResponse.class
+com\example\demo\entity\Employee.class
+com\example\demo\response\SalaryResponse.class
+com\example\demo\repository\EmployeeRepo.class
+com\example\demo\request\EmployeeRequest.class
+com\example\demo\configuration\EmployeeConfig.class
+com\example\demo\service\EmployeeService.class
+com\example\demo\controller\EmployeeController.class

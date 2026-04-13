@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Employee Manager</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+    <style>
+  :root {
+    --bg: #0d0f14;
+    --surface: #161920;
+    --card: #1e2230;
+    --border: #2a2f3f;
+    --accent: #4fffb0;
+    --accent2: #7b6fff;
+    --danger: #ff4f6b;
+    --warn: #ffb74f;
+    --gold: #ffd166;
+    --text: #e8eaf0;
+    --muted: #7a7f96;
+    --mono: 'Space Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--sans); min-height: 100vh; display: flex; flex-direction: column; }
+
+  header { padding: 20px 40px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 16px; }
+  .logo { font-family: var(--mono); font-size: 1rem; color: var(--accent); letter-spacing: 2px; text-transform: uppercase; }
+  .subtitle { font-size: 0.75rem; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-right: 6px; display: inline-block; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:.3;} }
+
+  .layout { display: grid; grid-template-columns: 230px 1fr; flex: 1; }
+
+  nav { border-right: 1px solid var(--border); padding: 28px 0; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+  .section-label { font-family: var(--mono); font-size: 0.62rem; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; padding: 0 20px 6px; margin-top: 18px; }
+  nav button { display: flex; align-items: center; gap: 10px; width: 100%; background: none; border: none; cursor: pointer; padding: 9px 20px; font-family: var(--sans); font-size: 0.86rem; color: var(--muted); text-align: left; transition: all .18s; border-left: 2px solid transparent; }
+  nav button:hover { color: var(--text); background: rgba(255,255,255,.03); }
+  nav button.active { color: var(--accent); background: rgba(79,255,176,.06); border-left-color: var(--accent); }
+  nav button.active-gold { color: var(--gold) !important; background: rgba(255,209,102,.06) !important; border-left-color: var(--gold) !important; }
+  .badge { font-family: var(--mono); font-size: 0.62rem; padding: 2px 6px; border-radius: 4px; font-weight: 700; }
+  .badge-get   { background: rgba(79,255,176,.15);  color: var(--accent); }
+  .badge-post  { background: rgba(123,111,255,.2);  color: var(--accent2); }
+  .badge-put   { background: rgba(255,183,79,.15);  color: var(--warn); }
+  .badge-patch { background: rgba(255,183,79,.08);  color: var(--warn); }
+  .badge-del   { background: rgba(255,79,107,.15);  color: var(--danger); }
+  .badge-ms2   { background: rgba(255,209,102,.15); color: var(--gold); }
+
+  main { padding: 36px 40px; max-width: 900px; }
+
+  .panel { display: none; animation: fadeIn .25s ease; }
+  .panel.active { display: block; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+  .panel-title { font-family: var(--mono); font-size: 0.7rem; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 4px; }
+  .panel-heading { font-size: 1.5rem; font-weight: 600; margin-bottom: 22px; }
+
+  .url-bar { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 10px 16px; font-family: var(--mono); font-size: 0.76rem; color: var(--muted); margin-bottom: 28px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .url-bar input { background: transparent; border: none; outline: none; color: var(--accent); font-family: var(--mono); font-size: 0.76rem; width: 220px; }
+
+  .form-group { margin-bottom: 14px; }
+  label { display: block; font-size: 0.74rem; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 5px; font-family: var(--mono); }
+  input[type=text], input[type=number], input[type=email] { width: 100%; background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 9px 13px; color: var(--text); font-family: var(--sans); font-size: 0.9rem; outline: none; transition: border-color .2s; }
+  input:focus { border-color: var(--accent2); }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+  .btn { display: inline-flex; align-items: center; gap: 8px; padding: 9px 20px; border-radius: 8px; border: none; cursor: pointer; font-family: var(--sans); font-size: 0.88rem; font-weight: 500; transition: all .18s; }
+  .btn-get   { background: rgba(79,255,176,.12);  color: var(--accent);  border: 1px solid rgba(79,255,176,.25); }
+  .btn-post  { background: rgba(123,111,255,.15); color: var(--accent2); border: 1px solid rgba(123,111,255,.3); }
+  .btn-put   { background: rgba(255,183,79,.12);  color: var(--warn);    border: 1px solid rgba(255,183,79,.25); }
+  .btn-patch { background: rgba(255,183,79,.07);  color: var(--warn);    border: 1px solid rgba(255,183,79,.18); }
+  .btn-del   { background: rgba(255,79,107,.12);  color: var(--danger);  border: 1px solid rgba(255,79,107,.25); }
+  .btn-ms2   { background: rgba(255,209,102,.12); color: var(--gold);    border: 1px solid rgba(255,209,102,.3); }
+  .btn:hover { filter: brightness(1.15); transform: translateY(-1px); }
+  .btn:active { transform: translateY(0); }
+
+  #toast-container {
+    position: fixed;
+    bottom: 20px; /* Spostato in basso */
+    right: 20px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+  .toast { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; font-size: 0.86rem; max-width: 320px; display: flex; align-items: flex-start; gap: 10px; animation: slideIn .25s ease; box-shadow: 0 8px 32px rgba(0,0,0,.4); }
+  .toast.success { border-left: 3px solid var(--accent); }
+  .toast.error   { border-left: 3px solid var(--danger); }
+  .toast.info    { border-left: 3px solid var(--accent2); }
+  .toast-icon { font-size: 1rem; flex-shrink: 0; }
+  .toast-msg { color: var(--text); line-height: 1.4; }
+  @keyframes slideIn { from{opacity:0;transform:translateX(20px)} to{opacity:1;transform:translateX(0)} }
+
+  .results { margin-top: 26px; }
+  .results-label { font-family: var(--mono); font-size: 0.62rem; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; }
+  .emp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+  .emp-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 18px; transition: border-color .2s; }
+  .emp-card:hover { border-color: var(--accent2); }
+  .emp-id { font-family: var(--mono); font-size: 0.68rem; color: var(--muted); margin-bottom: 6px; }
+  .emp-name { font-size: 1rem; font-weight: 600; margin-bottom: 4px; }
+  .emp-detail { font-size: 0.8rem; color: var(--muted); line-height: 1.6; }
+  .emp-detail span { color: var(--text); }
+  .json-box { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 18px; font-family: var(--mono); font-size: 0.76rem; color: var(--accent); white-space: pre-wrap; word-break: break-all; line-height: 1.7; }
+  .divider { height: 1px; background: var(--border); margin: 20px 0; }
+  .note { background: rgba(123,111,255,.06); border: 1px solid rgba(123,111,255,.18); border-radius: 8px; padding: 10px 14px; font-size: 0.8rem; color: var(--muted); line-height: 1.6; margin-bottom: 18px; }
+  .note strong { color: var(--accent2); }
+  .note-gold { background: rgba(255,209,102,.05); border: 1px solid rgba(255,209,102,.2); border-radius: 8px; padding: 10px 14px; font-size: 0.8rem; color: var(--muted); line-height: 1.6; margin-bottom: 18px; }
+  .note-gold strong { color: var(--gold); }
+
+  /* ── Salary Card ── */
+  .salary-card { background: var(--card); border: 1px solid rgba(255,209,102,.25); border-radius: 16px; padding: 28px; margin-top: 10px; }
+  .salary-header { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 24px; }
+  .salary-name { font-size: 1.3rem; font-weight: 700; }
+  .salary-role { font-family: var(--mono); font-size: 0.7rem; color: var(--gold); letter-spacing: 1px; text-transform: uppercase; margin-top: 4px; }
+  .score-ring { text-align: center; }
+  .score-num { font-family: var(--mono); font-size: 2rem; font-weight: 700; color: var(--gold); line-height: 1; }
+  .score-label { font-size: 0.7rem; color: var(--muted); margin-top: 2px; }
+  .score-bar-wrap { width: 120px; height: 6px; background: rgba(255,255,255,.08); border-radius: 3px; margin: 6px auto 0; }
+  .score-bar { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--danger), var(--warn), var(--accent)); transition: width .6s ease; }
+
+  .salary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+  .salary-row { background: rgba(255,255,255,.03); border-radius: 10px; padding: 14px 16px; border: 1px solid var(--border); }
+  .salary-row-label { font-family: var(--mono); font-size: 0.62rem; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+  .salary-row-val { font-size: 1.05rem; font-weight: 600; }
+  .val-green  { color: var(--accent); }
+  .val-yellow { color: var(--gold); }
+  .val-red    { color: var(--danger); }
+  .val-purple { color: var(--accent2); }
+
+  .irpef-breakdown { margin-top: 18px; }
+  .irpef-title { font-family: var(--mono); font-size: 0.62rem; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; }
+  .irpef-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 0.84rem; }
+  .irpef-row:last-child { border-bottom: none; }
+  .irpef-row-label { color: var(--muted); }
+  .irpef-row-val { font-family: var(--mono); font-size: 0.8rem; }
+  .benchmark-tag { display: inline-block; margin-top: 16px; padding: 6px 14px; border-radius: 20px; font-size: 0.78rem; font-family: var(--mono); font-weight: 700; background: rgba(79,255,176,.1); color: var(--accent); border: 1px solid rgba(79,255,176,.25); }
+
+  /* loading spinner */
+  .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,209,102,.3); border-top-color: var(--gold); border-radius: 50%; animation: spin .7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 680px) {
+    .layout { grid-template-columns: 1fr; }
+    nav { position: static; height: auto; display: flex; flex-wrap: wrap; padding: 10px; border-right: none; border-bottom: 1px solid var(--border); }
+    .section-label { display: none; }
+    nav button { width: auto; border-left: none; border-bottom: 2px solid transparent; padding: 7px 12px; font-size: .8rem; }
+    nav button.active { border-bottom-color: var(--accent); }
+    main { padding: 20px; }
+    .form-row { grid-template-columns: 1fr; }
+    .salary-grid { grid-template-columns: 1fr; }
+    .salary-header { flex-direction: column; }
+  }
+      /* Posizionamento del tasto Logout all'interno dei panel */
+.panel {
+    position: relative; /* Necessario per l'ancoraggio del tasto */
+}
+
+.logout-btn {
+    position: absolute;
+    top: 15px;      /* Distanza dall'alto del pannello */
+    right: 180px;   /* Spostato a sinistra per non coprire i toast */
+
+    /* ... resto del tuo stile ... */
+    background: rgba(255, 79, 107, 0.1);
+    color: var(--danger);
+    border: 1px solid var(--danger);
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    font-weight: bold;
+    z-index: 999;
+}
+
+.logout-btn:hover {
+    background: var(--danger);
+    color: white;
+    box-shadow: 0 0 12px rgba(255, 79, 107, 0.4);
+}
+
+/* Pannello speciale per la conferma logout */
+.logout-confirm-box {
+    text-align: center;
+    padding: 40px 20px;
+}
+.logout-confirm-box i {
+    font-size: 3rem;
+    display: block;
+    margin-bottom: 20px;
+}
+.logo {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 1.4rem;
+    letter-spacing: -0.5px;
+    color: var(--text);
+    /* Rimuovi eventuali margini strani se necessario */
+}
+</style>
+</head>
+<body>
+
+<header style="display: flex; align-items: center; padding: 1rem 2rem; background: var(--surface); border-bottom: 1px solid var(--border);">
+    <div style="display: flex; align-items: center; gap: 15px;">
+        <img src="static/logo.jpg" alt="Logo" style="width: 50px; height: 50px; border-radius: 10px; border: 2px solid var(--accent); object-fit: cover;">
+
+        <div style="display: flex; flex-direction: column; justify-content: center;">
+            <div class="logo" style="margin: 0; line-height: 1; font-size: 1.5rem;">Employee Manager</div>
+            <div class="subtitle" style="margin: 5px 0 0 0; opacity: 0.7;">REST API Console · Spring Boot</div>
+            <button class="logout-btn" onclick="confirmLogout()">󰈆 LOGOUT</button>
+        </div>
+    </div>
+</header>
+
+<div class="layout">
+    <nav>
+        <div class="section-label">GET</div>
+        <button class="active" onclick="show('all')" id="nav-all"><span class="badge badge-get">GET</span> Tutti gli impiegati</button>
+        <button onclick="show('byId')" id="nav-byId"><span class="badge badge-get">GET</span> Per ID</button>
+        <button onclick="show('byCognome')" id="nav-byCognome"><span class="badge badge-get">GET</span> Per Cognome</button>
+        <div class="section-label">WRITE</div>
+        <button onclick="show('post')" id="nav-post"><span class="badge badge-post">POST</span> Crea impiegato</button>
+        <button onclick="show('put')" id="nav-put"><span class="badge badge-put">PUT</span> Sostituisci</button>
+        <button onclick="show('patch')" id="nav-patch"><span class="badge badge-patch">PATCH</span> Aggiorna parz.</button>
+        <div class="section-label">DELETE</div>
+        <button onclick="show('del')" id="nav-del"><span class="badge badge-del">DELETE</span> Elimina</button>
+        <div class="section-label">MS1 ↔ MS2</div>
+        <button onclick="show('salary')" id="nav-salary"><span class="badge badge-ms2">★ MS2</span> Salary Analytics</button>
+    </nav>
+
+    <main>
+        <div class="url-bar">
+            Base URL MS1:&nbsp;
+            <input type="text" id="baseUrl" value="http://localhost:8080" title="IP del tuo server MS1"/>
+        </div>
+        <!-- GET ALL -->
+        <div class="panel active" id="panel-all">
+            <div class="panel-title">GET</div>
+            <div class="panel-heading">Lista completa impiegati</div>
+            <div class="note"><strong>Endpoint:</strong> GET /impiegati</div>
+            <button class="btn btn-get" onclick="getAll()">▶ Esegui</button>
+            <div class="results" id="res-all"></div>
+        </div>
+
+        <!-- GET BY ID -->
+        <div class="panel" id="panel-byId">
+            <div class="panel-title">GET</div>
+            <div class="panel-heading">Ricerca per ID</div>
+            <div class="note"><strong>Endpoint:</strong> GET /impiegati/id/{id}</div>
+            <div class="form-group">
+                <label>ID Impiegato</label>
+                <input type="number" id="searchId" placeholder="es: 1" style="max-width:180px"/>
+            </div>
+            <button class="btn btn-get" onclick="getById()">▶ Cerca</button>
+            <div class="results" id="res-byId"></div>
+        </div>
+
+        <!-- GET BY COGNOME -->
+        <div class="panel" id="panel-byCognome">
+            <div class="panel-title">GET</div>
+            <div class="panel-heading">Ricerca per Cognome</div>
+            <div class="note"><strong>Endpoint:</strong> GET /impiegati/cognome/{cognome}</div>
+            <div class="form-group">
+                <label>Cognome</label>
+                <input type="text" id="searchCognome" placeholder="es: Rossi" style="max-width:260px"/>
+            </div>
+            <button class="btn btn-get" onclick="getByCognome()">▶ Cerca</button>
+            <div class="results" id="res-byCognome"></div>
+        </div>
+
+        <!-- POST -->
+        <div class="panel" id="panel-post">
+            <div class="panel-title">POST</div>
+            <div class="panel-heading">Crea nuovo impiegato</div>
+            <div class="note"><strong>Endpoint:</strong> POST /impiegati</div>
+            <div class="form-row">
+                <div class="form-group"><label>Nome</label><input type="text" id="p-name" placeholder="Mario"/></div>
+                <div class="form-group"><label>Cognome</label><input type="text" id="p-cognome" placeholder="Rossi"/></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>Email</label><input type="email" id="p-email" placeholder="mario.rossi@mail.it"/></div>
+                <div class="form-group"><label>Età</label><input type="number" id="p-age" placeholder="30"/></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Stipendio Annuo (RAL)</label>
+                    <input type="number" id="p-salary" placeholder="es: 30000"/>
+                </div>
+            </div>
+            <button class="btn btn-post" onclick="createEmployee()">✦ Crea impiegato</button>
+            <div class="results" id="res-post"></div>
+        </div>
+
+        <!-- PUT -->
+        <div class="panel" id="panel-put">
+            <div class="panel-title">PUT</div>
+            <div class="panel-heading">Sostituisci impiegato</div>
+            <div class="note"><strong>Endpoint:</strong> PUT /impiegati/{id} — sostituzione <strong>completa</strong> di tutti i campi.</div>
+            <div class="form-group"><label>ID da sostituire</label><input type="number" id="put-id" placeholder="es: 3" style="max-width:180px"/></div>
+            <div class="divider"></div>
+            <div class="form-row">
+                <div class="form-group"><label>Nome</label><input type="text" id="put-name"/></div>
+                <div class="form-group"><label>Cognome</label><input type="text" id="put-cognome"/></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>Email</label><input type="email" id="put-email"/></div>
+                <div class="form-group"><label>Età</label><input type="number" id="put-age"/></div>
+            </div>
+            <button class="btn btn-put" onclick="replaceEmployee()">↺ Sostituisci</button>
+            <div class="results" id="res-put"></div>
+        </div>
+
+        <!-- PATCH -->
+        <div class="panel" id="panel-patch">
+            <div class="panel-title">PATCH</div>
+            <div class="panel-heading">Aggiornamento parziale</div>
+            <div class="note"><strong>Endpoint:</strong> PATCH /impiegati/{id} — aggiorna <strong>solo i campi compilati</strong>.</div>
+            <div class="form-group"><label>ID Impiegato</label><input type="number" id="patch-id" placeholder="es: 2" style="max-width:180px"/></div>
+            <div class="divider"></div>
+            <div class="form-row">
+                <div class="form-group"><label>Nome <span style="color:var(--muted)">(opz.)</span></label><input type="text" id="patch-name" placeholder="lascia vuoto = non modificare"/></div>
+                <div class="form-group"><label>Cognome <span style="color:var(--muted)">(opz.)</span></label><input type="text" id="patch-cognome" placeholder="lascia vuoto = non modificare"/></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>Email <span style="color:var(--muted)">(opz.)</span></label><input type="email" id="patch-email" placeholder="lascia vuoto = non modificare"/></div>
+                <div class="form-group"><label>Età <span style="color:var(--muted)">(0 = non modificare)</span></label><input type="number" id="patch-age" placeholder="0"/></div>
+            </div>
+            <button class="btn btn-patch" onclick="patchEmployee()">✎ Aggiorna</button>
+            <div class="results" id="res-patch"></div>
+        </div>
+
+        <!-- DELETE -->
+        <div class="panel" id="panel-del">
+            <div class="panel-title">DELETE</div>
+            <div class="panel-heading">Elimina impiegato</div>
+            <div class="note"><strong>Endpoint:</strong> DELETE /impiegati/{id}</div>
+            <div class="form-group"><label>ID da eliminare</label><input type="number" id="del-id" placeholder="es: 5" style="max-width:180px"/></div>
+            <button class="btn btn-del" onclick="deleteEmployee()">✕ Elimina</button>
+            <div class="results" id="res-del"></div>
+        </div>
+
+        <!-- ★ SALARY ANALYTICS (MS1 → MS2) -->
+        <div class="panel" id="panel-salary">
+            <div class="panel-title">MS1 → MS2 · RestClient</div>
+            <div class="panel-heading">Salary Analytics</div>
+            <div class="note-gold">
+                <strong>Come funziona:</strong> MS1 recupera l'impiegato dal proprio DB, poi chiama
+                <strong>MS2 (porta 8081)</strong> via <strong>RestClient</strong>. MS2 calcola
+                la scheda stipendiale con aliquote IRPEF 2024 reali + contributi INPS 9,19%
+                e restituisce il netto mensile, lo score salariale e il benchmark nazionale.
+            </div>
+            <div class="note"><strong>Endpoint MS1:</strong> GET /impiegati/{id}/salary</div>
+            <div class="form-group">
+                <label>ID Impiegato</label>
+                <input type="number" id="salary-id" placeholder="es: 1" style="max-width:180px"/>
+            </div>
+            <button class="btn btn-ms2" onclick="getSalary()" id="salary-btn">★ Calcola Stipendio</button>
+            <div class="results" id="res-salary"></div>
+        </div>
+        <div class="panel" id="panel-logout">
+            <div class="panel-title">SESSIONE</div>
+            <div class="logout-confirm-box">
+                <h2 style="color:var(--danger); margin-bottom:10px;">Chiudere la sessione?</h2>
+                <p style="color:var(--muted); margin-bottom:25px;">Il tuo token JWT verrà eliminato e dovrai rieffettuare il login.</p>
+                <div style="display:flex; gap:10px; justify-content:center;">
+                    <button class="btn" style="background:var(--surface); width:auto;" onclick="show('all')">Annulla</button>
+                    <button class="btn btn-del" style="width:auto;" onclick="executeLogout()">Sì, esci ora</button>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<div id="toast-container"></div>
+
+<script>
+  const panels = ['all','byId','byCognome','post','put','patch','del','salary'];
+
+  function show(id) {
+    panels.forEach(p => {
+      document.getElementById('panel-'+p).classList.toggle('active', p===id);
+      const nav = document.getElementById('nav-'+p);
+      nav.classList.remove('active','active-gold');
+      if (p === id) nav.classList.add(p === 'salary' ? 'active-gold' : 'active');
+    });
+  }
+
+  function base() {
+    return document.getElementById('baseUrl').value.replace(/\/$/,'') + '/impiegati';
+  }
+
+  function toast(msg, type='info') {
+  // Aggiungiamo 'warn' alla lista delle icone
+  const icons = {
+    success: '✓',
+    error: '✕',
+    info: 'ℹ',
+    warn: '⚠'
+  };
+
+  const el = document.createElement('div');
+
+  // Se il tipo passato non esiste nelle icone, usiamo 'info' come backup
+  const activeType = icons[type] ? type : 'info';
+  const icon = icons[activeType];
+
+  el.className = `toast ${activeType}`;
+  el.innerHTML = `<span class="toast-icon">${icon}</span><span class="toast-msg">${msg}</span>`;
+
+  const container = document.getElementById('toast-container');
+  if (container) {
+    container.appendChild(el);
+    // Rimuovi dopo 4.5 secondi
+    setTimeout(() => el.remove(), 4500);
+  }
+}
+
+  function fmt(n) {
+    return Number(n).toLocaleString('it-IT', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' €';
+  }
+
+  function renderCards(container, data) {
+    const arr = Array.isArray(data) ? data : [data];
+    if (!arr.length) { container.innerHTML = '<div class="json-box">Nessun impiegato trovato.</div>'; return; }
+    container.innerHTML = `<div class="results-label">Risultati (${arr.length})</div>
+      <div class="emp-grid">${arr.map(e=>`
+        <div class="emp-card">
+          <div class="emp-id"># ${e.id}</div>
+          <div class="emp-name">${e.name} ${e.cognome}</div>
+          <div class="emp-detail">Email: <span>${e.email}</span></div>
+          <div class="emp-detail">Età: <span>${e.age}</span></div>
+        </div>`).join('')}
+      </div>`;
+  }
+
+  function renderSalaryCard(container, s) {
+    const scoreW = Math.max(4, s.salaryScore);
+    container.innerHTML = `
+      <div class="results-label">Scheda Stipendiale · MS2 Response</div>
+      <div class="salary-card">
+        <div class="salary-header">
+          <div>
+            <div class="salary-name">${s.employeeName}</div>
+            <div class="salary-role">${s.roleCategory} · ${s.age} anni</div>
+            <div class="benchmark-tag">${s.salaryBenchmark}</div>
+          </div>
+          <div class="score-ring">
+            <div class="score-num">${s.salaryScore}</div>
+            <div class="score-label">Salary Score</div>
+            <div class="score-bar-wrap"><div class="score-bar" style="width:${scoreW}%"></div></div>
+          </div>
+        </div>
+
+        <div class="salary-grid">
+          <div class="salary-row">
+            <div class="salary-row-label">RAL Lorda stimata</div>
+            <div class="salary-row-val val-yellow">${fmt(s.ralLorda)}</div>
+          </div>
+          <div class="salary-row">
+            <div class="salary-row-label">Mensile Lordo (÷13)</div>
+            <div class="salary-row-val val-yellow">${fmt(s.mensileLordo)}</div>
+          </div>
+          <div class="salary-row">
+            <div class="salary-row-label">Netto Annuo</div>
+            <div class="salary-row-val val-green">${fmt(s.nettoAnnuo)}</div>
+          </div>
+          <div class="salary-row">
+            <div class="salary-row-label">Netto Mensile</div>
+            <div class="salary-row-val val-green">${fmt(s.nettoMensile)}</div>
+          </div>
+          <div class="salary-row">
+            <div class="salary-row-label">IRPEF totale annua</div>
+            <div class="salary-row-val val-red">${fmt(s.irpefTotaleAnnuo)}</div>
+          </div>
+          <div class="salary-row">
+            <div class="salary-row-label">INPS annuo (9,19%)</div>
+            <div class="salary-row-val val-red">${fmt(s.inpsAnnuo)}</div>
+          </div>
+          <div class="salary-row">
+            <div class="salary-row-label">Aliquota effettiva</div>
+            <div class="salary-row-val val-purple">${s.aliquotaEffettiva.toFixed(1)}%</div>
+          </div>
+          <div class="salary-row">
+            <div class="salary-row-label">Detrazione lav. dip.</div>
+            <div class="salary-row-val val-purple">${fmt(s.detrazioniLavoroDipendente)}</div>
+          </div>
+        </div>
+
+        <div class="irpef-breakdown">
+          <div class="irpef-title">Breakdown IRPEF 2024 (scaglioni)</div>
+          <div class="irpef-row">
+            <span class="irpef-row-label">23% su 0 – 28.000 €</span>
+            <span class="irpef-row-val val-red">${fmt(s.irpefScaglione1)}</span>
+          </div>
+          <div class="irpef-row">
+            <span class="irpef-row-label">35% su 28.001 – 50.000 €</span>
+            <span class="irpef-row-val val-red">${fmt(s.irpefScaglione2)}</span>
+          </div>
+          <div class="irpef-row">
+            <span class="irpef-row-label">43% su oltre 50.000 €</span>
+            <span class="irpef-row-val val-red">${fmt(s.irpefScaglione3)}</span>
+          </div>
+          <div class="irpef-row" style="border-top:1px solid var(--border);margin-top:4px;padding-top:10px">
+            <span class="irpef-row-label" style="color:var(--text)">IRPEF mensile (÷13)</span>
+            <span class="irpef-row-val val-red">${fmt(s.irpefMensile)}</span>
+          </div>
+        </div>
+
+      </div>`;
+  }
+
+  function renderMsg(container, msg) {
+    container.innerHTML = `<div class="results-label">Risposta</div><div class="json-box">${msg}</div>`;
+  }
+
+  function renderError(container, msg) {
+    container.innerHTML = `<div class="results-label">Errore</div><div class="json-box" style="color:var(--danger)">${msg}</div>`;
+  }
+
+  async function apiCall(method, url, body = null) {
+  const token = sessionStorage.getItem('jwt_token');
+  const headers = { 'Content-Type': 'application/json' };
+
+  if (token) {
+    headers['Authorization'] = 'Bearer ' + token;
+  }
+
+  const opts = {
+    method: method,
+    headers: headers
+  };
+
+  if (body) {
+    opts.body = JSON.stringify(body);
+  }
+
+  const res = await fetch(url, opts);
+  const text = await res.text();
+  let json;
+  try {
+    json = JSON.parse(text);
+  } catch (e) {
+    json = text;
+  }
+  return { ok: res.ok, status: res.status, data: json };
+}
+
+  async function getAll() {
+    const c = document.getElementById('res-all');
+    try {
+      const r = await apiCall('GET', base());
+      if (r.ok) { renderCards(c, r.data); toast(`Trovati ${r.data.length} impiegati`, 'success'); }
+      else { renderError(c, r.data?.message || 'Errore nella richiesta'); toast('Errore dal server', 'error'); }
+    } catch { renderError(c, 'Impossibile raggiungere il server. Verifica che Spring Boot sia avviato.'); toast('Connessione fallita', 'error'); }
+  }
+
+  async function getById() {
+    const id = document.getElementById('searchId').value.trim();
+    const c = document.getElementById('res-byId');
+    if (!id) { toast('Inserisci un ID', 'error'); return; }
+    try {
+      const r = await apiCall('GET', `${base()}/id/${id}`);
+      if (r.ok) { renderCards(c, r.data); toast(`Impiegato #${id} trovato`, 'success'); }
+      else { renderError(c, r.data?.message || `Impiegato con id ${id} non trovato`); toast(`Impiegato #${id} non trovato`, 'error'); }
+    } catch { renderError(c, 'Impossibile raggiungere il server.'); toast('Connessione fallita', 'error'); }
+  }
+
+  async function getByCognome() {
+    const cog = document.getElementById('searchCognome').value.trim();
+    const c = document.getElementById('res-byCognome');
+    if (!cog) { toast('Inserisci un cognome', 'error'); return; }
+    try {
+      const r = await apiCall('GET', `${base()}/cognome/${encodeURIComponent(cog)}`);
+      if (r.ok) { renderCards(c, r.data); toast(`Trovati ${r.data.length} impiegati con cognome "${cog}"`, 'success'); }
+      else { renderError(c, r.data?.message || 'Nessun risultato'); toast('Nessun impiegato trovato', 'error'); }
+    } catch { renderError(c, 'Impossibile raggiungere il server.'); toast('Connessione fallita', 'error'); }
+  }
+
+  async function createEmployee() {
+    const body = {
+      name:    document.getElementById('p-name').value.trim(),
+      cognome: document.getElementById('p-cognome').value.trim(),
+      email:   document.getElementById('p-email').value.trim(),
+      age:     parseInt(document.getElementById('p-age').value) || 0
+    };
+    const c = document.getElementById('res-post');
+    if (!body.name || !body.cognome) { toast('Nome e Cognome sono obbligatori', 'error'); return; }
+    try {
+      const r = await apiCall('POST', base(), body);
+      if (r.ok) { renderCards(c, r.data); toast('Impiegato creato! ID: ' + r.data.id, 'success'); }
+      else { renderError(c, r.data?.message || 'Errore nella creazione'); toast('Errore nella creazione', 'error'); }
+    } catch { renderError(c, 'Impossibile raggiungere il server.'); toast('Connessione fallita', 'error'); }
+  }
+
+  async function replaceEmployee() {
+    const id = document.getElementById('put-id').value.trim();
+    const body = {
+      name:    document.getElementById('put-name').value.trim(),
+      cognome: document.getElementById('put-cognome').value.trim(),
+      email:   document.getElementById('put-email').value.trim(),
+      age:     parseInt(document.getElementById('put-age').value) || 0
+    };
+    const c = document.getElementById('res-put');
+    if (!id) { toast("Inserisci l'ID dell'impiegato", 'error'); return; }
+    try {
+      const r = await apiCall('PUT', `${base()}/${id}`, body);
+      if (r.ok) { renderCards(c, r.data); toast(`Impiegato #${id} sostituito con successo`, 'success'); }
+      else { renderError(c, r.data?.message || `Impiegato con id ${id} non trovato`); toast('Errore: ' + (r.data?.message || r.status), 'error'); }
+    } catch { renderError(c, 'Impossibile raggiungere il server.'); toast('Connessione fallita', 'error'); }
+  }
+
+  async function patchEmployee() {
+    const id = document.getElementById('patch-id').value.trim();
+    const body = {};
+    const name    = document.getElementById('patch-name').value.trim();
+    const cognome = document.getElementById('patch-cognome').value.trim();
+    const email   = document.getElementById('patch-email').value.trim();
+    const age     = parseInt(document.getElementById('patch-age').value) || 0;
+    if (name)    body.name    = name;
+    if (cognome) body.cognome = cognome;
+    if (email)   body.email   = email;
+    if (age > 0) body.age     = age;
+    const c = document.getElementById('res-patch');
+    if (!id) { toast("Inserisci l'ID dell'impiegato", 'error'); return; }
+    if (!Object.keys(body).length) { toast('Compila almeno un campo da aggiornare', 'error'); return; }
+    try {
+      const r = await apiCall('PATCH', `${base()}/${id}`, body);
+      if (r.ok) { renderCards(c, r.data); toast(`Impiegato #${id} aggiornato con successo`, 'success'); }
+      else { renderError(c, r.data?.message || `Impiegato con id ${id} non trovato`); toast('Errore: ' + (r.data?.message || r.status), 'error'); }
+    } catch { renderError(c, 'Impossibile raggiungere il server.'); toast('Connessione fallita', 'error'); }
+  }
+
+  async function deleteEmployee() {
+    const id = document.getElementById('del-id').value.trim();
+    const c = document.getElementById('res-del');
+    if (!id) { toast("Inserisci l'ID da eliminare", 'error'); return; }
+    if (!confirm(`Sei sicuro di voler eliminare l'impiegato #${id}?`)) return;
+    try {
+      const r = await apiCall('DELETE', `${base()}/${id}`);
+      if (r.ok) { renderMsg(c, typeof r.data==='string' ? r.data : JSON.stringify(r.data)); toast(`Impiegato #${id} eliminato con successo`, 'success'); }
+      else { renderError(c, r.data?.message || `Impiegato con id ${id} non trovato`); toast('Errore: ' + (r.data?.message || r.status), 'error'); }
+    } catch { renderError(c, 'Impossibile raggiungere il server.'); toast('Connessione fallita', 'error'); }
+  }
+
+  // ── SALARY ANALYTICS (MS1 → MS2) ──────────────────────────────────────────
+  async function getSalary() {
+    const id = document.getElementById('salary-id').value.trim();
+    const c  = document.getElementById('res-salary');
+    const btn = document.getElementById('salary-btn');
+    if (!id) { toast("Inserisci l'ID dell'impiegato", 'error'); return; }
+
+    // loading state
+    btn.innerHTML = '<span class="spinner"></span> Calcolo in corso…';
+    btn.disabled = true;
+    c.innerHTML = '';
+
+    try {
+      const r = await apiCall('GET', `${base()}/${id}/salary`);
+      if (r.ok) {
+        renderSalaryCard(c, r.data);
+        toast(`Scheda stipendiale per impiegato #${id} calcolata da MS2`, 'success');
+      } else {
+        renderError(c, r.data?.message || `Errore: impiegato #${id} non trovato o MS2 non raggiungibile`);
+        toast('Errore nella comunicazione MS1↔MS2', 'error');
+      }
+    } catch {
+      renderError(c, 'Impossibile raggiungere MS1. Verifica che entrambi i microservizi siano avviati.');
+      toast('Connessione fallita', 'error');
+    } finally {
+      btn.innerHTML = '★ Calcola Stipendio';
+      btn.disabled = false;
+    }
+  }
+
+        // Funzione per mostrare il pannello di conferma
+    function confirmLogout() {
+        show('logout');
+    }
+
+    // Funzione che esegue l'uscita vera e propria
+    function executeLogout() {
+        // Rimuove il token
+        sessionStorage.removeItem('jwt_token');
+
+        // Feedback visivo
+        toast('Disconnessione in corso...', 'warn');
+
+        // Opzionale: pulisce i risultati a video prima di uscire
+        document.querySelectorAll('.results').forEach(r => r.innerHTML = '');
+
+        // Reindirizza al login dopo un secondo
+        setTimeout(() => {
+            window.location.href = 'login.html';
+        }, 1000);
+    }
+
+    function show(id) {
+        // Nasconde tutti i panel
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        // Rimuove la classe active dai tasti nav
+        document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+
+        // Mostra il panel selezionato
+        const targetPanel = document.getElementById('panel-' + id);
+        if (targetPanel) targetPanel.classList.add('active');
+
+        // Attiva il tasto nav corrispondente (se esiste)
+        const targetNav = document.getElementById('nav-' + id);
+        if (targetNav) targetNav.classList.add('active');
+    }
+</script>
+</body>
+</html>
