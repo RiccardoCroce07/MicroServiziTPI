@@ -1,0 +1,3 @@
+Per far iniziare il docker in locale: docker-compose -f docker-compose.autonomo.yml up --build 
+Per far iniziare il docker in macchina a scuola: docker-compose -f docker-compose.scuola.yml up --build 
+Host:127.0.0.1,Porta:3307,Database:employeedb,Username:appuser,Password:apppass
