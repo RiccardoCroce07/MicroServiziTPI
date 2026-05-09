@@ -9,4 +9,12 @@ public interface EmployeeRepo extends JpaRepository<Employee, Integer> {
 
     List<Employee> findByCognome(String cognome);
 
+    boolean existsByNameAndCognome(String name, String cognome);
+
+    boolean existsByEmail(String email);
+
+    boolean existsByEmailAndIdNot(String email, int id);
+
+    boolean existsByNameAndCognomeAndIdNot(String name, String cognome, int id);
+
 }

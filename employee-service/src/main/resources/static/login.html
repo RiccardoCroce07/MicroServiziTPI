@@ -476,9 +476,10 @@
       const data = await res.json();
 
       if (res.ok && data.token) {
-        // Salva il token in sessionStorage così la dashboard lo può usare
-        sessionStorage.setItem('jwt_token', data.token);
-        sessionStorage.setItem('jwt_username', username);
+        // Salva il token in localStorage così la dashboard lo può usare
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('ruolo', data.ruolo);
+        localStorage.setItem('username', data.username || username);
 
         document.getElementById('token-value').textContent = data.token;
         tokenBox.classList.add('show');

@@ -16,7 +16,7 @@ public class Employee {
     @Column(name = "cognome")
     private String cognome;
 
-    @Column(name = "email")
+    @Column(name = "email", unique = true)
     private String email;
 
     @Column(name = "age")

@@ -15,7 +15,7 @@ services:
   # ─────────────────────────────────────────
   ms1-employee:
     build:
-      context: ./demo
+      context: ./employee-service
     container_name: ms1-employee
     restart: unless-stopped
     ports:
@@ -30,7 +30,7 @@ services:
       SPRING_DATASOURCE_DRIVER_CLASS_NAME: com.mysql.cj.jdbc.Driver
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       # MS2 raggiungibile per nome container nella rete Docker
-      SALARY_SERVICE_URL: http://salary:8081
+      SALARY_SERVICE_URL: http://ms2-salary:8081   # ← CORRETTO (era http://salary:8081)
       JWT_SECRET: chiaveSuperSegretaLungaAlmeno32Caratteri
       JWT_EXPIRATION: 86400000
     depends_on:

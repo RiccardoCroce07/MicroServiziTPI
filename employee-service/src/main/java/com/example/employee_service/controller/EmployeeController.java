@@ -23,6 +23,12 @@ public class EmployeeController {
     @Autowired
     private EmployeeService employeeService;
 
+    // Gestione errori di validazione → 400 Bad Request con messaggio leggibile
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<String> handleValidation(IllegalArgumentException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+    }
+
     // FASE 1a - GET per ID: localhost:8080/impiegati/id/2
     @GetMapping("/id/{id}")
     public ResponseEntity<EmployeeResponse> getEmployeeById(@PathVariable("id") int id) {

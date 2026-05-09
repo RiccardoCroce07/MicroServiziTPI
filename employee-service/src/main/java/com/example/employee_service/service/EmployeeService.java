@@ -46,6 +46,22 @@ public class EmployeeService {
 
     // FASE 2 - POST: crea nuovo impiegato
     public EmployeeResponse createEmployee(EmployeeRequest request) {
+        // Validazione età
+        if (request.getAge() <= 0)
+            throw new IllegalArgumentException("L'età deve essere maggiore di 0");
+
+        // Validazione stipendio
+        if (request.getSalary() == null || request.getSalary() <= 0)
+            throw new IllegalArgumentException("Lo stipendio deve essere maggiore di 0");
+
+        // Controllo nome + cognome duplicato
+        if (employeeRepo.existsByNameAndCognome(request.getName(), request.getCognome()))
+            throw new IllegalArgumentException("Esiste già un impiegato con nome '" + request.getName() + "' e cognome '" + request.getCognome() + "'");
+
+        // Controllo email unica
+        if (request.getEmail() != null && employeeRepo.existsByEmail(request.getEmail()))
+            throw new IllegalArgumentException("L'email '" + request.getEmail() + "' è già registrata");
+
         Employee employee = mapper.map(request, Employee.class);
         Employee saved = employeeRepo.save(employee);
         return mapper.map(saved, EmployeeResponse.class);
@@ -53,9 +69,25 @@ public class EmployeeService {
 
     // FASE 2 - PUT: sostituzione completa impiegato
     public EmployeeResponse replaceEmployee(int id, EmployeeRequest request) {
-        if (!employeeRepo.existsById(id)) {
+        if (!employeeRepo.existsById(id))
             throw new RuntimeException("Impiegato con id " + id + " non trovato");
-        }
+
+        // Validazione età
+        if (request.getAge() <= 0)
+            throw new IllegalArgumentException("L'età deve essere maggiore di 0");
+
+        // Validazione stipendio
+        if (request.getSalary() == null || request.getSalary() <= 0)
+            throw new IllegalArgumentException("Lo stipendio deve essere maggiore di 0");
+
+        // Controllo nome + cognome duplicato (escludo l'impiegato stesso)
+        if (employeeRepo.existsByNameAndCognomeAndIdNot(request.getName(), request.getCognome(), id))
+            throw new IllegalArgumentException("Esiste già un altro impiegato con nome '" + request.getName() + "' e cognome '" + request.getCognome() + "'");
+
+        // Controllo email unica (escludo l'impiegato stesso)
+        if (request.getEmail() != null && employeeRepo.existsByEmailAndIdNot(request.getEmail(), id))
+            throw new IllegalArgumentException("L'email '" + request.getEmail() + "' è già registrata da un altro impiegato");
+
         Employee employee = mapper.map(request, Employee.class);
         employee.setId(id);
         Employee saved = employeeRepo.save(employee);
@@ -67,11 +99,33 @@ public class EmployeeService {
         Employee employee = employeeRepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Impiegato con id " + id + " non trovato"));
 
+        // Validazione età se fornita
+        if (request.getAge() > 0) {
+            employee.setAge(request.getAge());
+        } else if (request.getAge() < 0) {
+            throw new IllegalArgumentException("L'età non può essere negativa");
+        }
+
+        // Validazione stipendio se fornito
+        if (request.getSalary() != null) {
+            if (request.getSalary() <= 0)
+                throw new IllegalArgumentException("Lo stipendio deve essere maggiore di 0");
+            employee.setSalary(request.getSalary());
+        }
+
         if (request.getName() != null)    employee.setName(request.getName());
         if (request.getCognome() != null) employee.setCognome(request.getCognome());
-        if (request.getEmail() != null)   employee.setEmail(request.getEmail());
-        if (request.getAge() > 0)         employee.setAge(request.getAge());
-        if (request.getSalary() != null)  employee.setSalary(request.getSalary());
+
+        // Controllo nome + cognome duplicato (escludo l'impiegato stesso)
+        if (employeeRepo.existsByNameAndCognomeAndIdNot(employee.getName(), employee.getCognome(), id))
+            throw new IllegalArgumentException("Esiste già un altro impiegato con nome '" + employee.getName() + "' e cognome '" + employee.getCognome() + "'");
+
+        if (request.getEmail() != null) {
+            // Controllo email unica (escludo l'impiegato stesso)
+            if (employeeRepo.existsByEmailAndIdNot(request.getEmail(), id))
+                throw new IllegalArgumentException("L'email '" + request.getEmail() + "' è già registrata da un altro impiegato");
+            employee.setEmail(request.getEmail());
+        }
 
         Employee saved = employeeRepo.save(employee);
         return mapper.map(saved, EmployeeResponse.class);

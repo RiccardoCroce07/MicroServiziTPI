@@ -6,8 +6,8 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="salary-analytics" />
         <module name="employee-service" />
+        <module name="salary-analytics" />
       </profile>
     </annotationProcessing>
   </component>
